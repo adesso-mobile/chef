@@ -146,10 +146,6 @@ class Chef
         end
       end
 
-      def initialize_content_object
-        # subclasses may inject information into the content strategy object here (see template.rb)
-      end
-
       def action_create
         initialize_content_object
         do_create_file
