@@ -40,7 +40,7 @@ class Chef
       attr_accessor :content_strategy
 
       def initialize(new_resource, run_context)
-        @content_strategy ||= Chef::Provider::FileStrategy::ContentFromResource
+        @content_class ||= Chef::Provider::FileStrategy::ContentFromResource
         super
       end
 
@@ -49,7 +49,11 @@ class Chef
       end
 
       def content_object
-        @content_object ||= @content_strategy.new(new_resource, current_resource, run_context)
+        @content_object ||= @content_class.new(@new_resource, @current_resource, @run_context)
+      end
+
+      def content_strategy
+        @content_strategy ||= Chef::Provider::FileStrategy::ContentStrategy.new(content_object, new_resource, current_resource, run_context)
       end
 
       def load_current_resource
@@ -114,23 +118,23 @@ class Chef
       # handles both cases of when the file exists and must be backed up, and when it does not and must be created
       def tempfile_to_destfile
         backup @new_resource.path if ::File.exists?(@new_resource.path)
-        filename = content_object.tempfile.path
+        filename = content_strategy.tempfile.path
         FileUtils.cp(filename, @new_resource.path) if filename && ::File.exists?(filename)
-        content_object.cleanup
+        content_strategy.cleanup
       end
 
       def do_contents_changes
-        if content_object.contents_changed?
+        if content_strategy.contents_changed?
           description = []
-          description << "update content in file #{@new_resource.path} from #{short_cksum(@current_resource.checksum)} to #{short_cksum(content_object.checksum)}"
-          description << diff(content_object.tempfile.path)
+          description << "update content in file #{@new_resource.path} from #{short_cksum(@current_resource.checksum)} to #{short_cksum(content_strategy.checksum)}"
+          description << diff(content_strategy.tempfile.path)
           converge_by(description) do
             tempfile_to_destfile
             Chef::Log.info("#{@new_resource} updated file contents #{@new_resource.path}")
           end
         end
         # the cleanup in the converge_by will not be run in whyrun-mode
-        content_object.cleanup if whyrun_mode?
+        content_strategy.cleanup if whyrun_mode?
       end
 
       # because we touch first to create files, we get umasks and inherit
@@ -147,7 +151,6 @@ class Chef
       end
 
       def action_create
-        initialize_content_object
         do_create_file
         do_contents_changes
         do_acl_changes

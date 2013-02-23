@@ -25,7 +25,13 @@ require 'chef/provider/file_strategy/content_strategy'
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromRemoteFile < ContentStrategy
+      class ContentFromRemoteFile
+        def initialize(new_resource, current_resource, run_context)
+          @new_resource = new_resource
+          @current_resource = current_resource
+          @run_context = run_context
+        end
+
         def tempfile
           @tempfile ||= begin
                           Chef::Log.debug("#{@new_resource} checking for changes")

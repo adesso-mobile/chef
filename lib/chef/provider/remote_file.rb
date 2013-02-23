@@ -23,7 +23,7 @@ class Chef
     class RemoteFile < Chef::Provider::File
 
       def initialize(new_resource, run_context)
-        @content_strategy = Chef::Provider::FileStrategy::ContentFromRemoteFile
+        @content_class = Chef::Provider::FileStrategy::ContentFromRemoteFile
         super
       end
 

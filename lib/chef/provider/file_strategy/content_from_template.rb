@@ -22,8 +22,26 @@ require 'chef/provider/file_strategy/content_strategy'
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromTemplate < ContentStrategy
+      class ContentFromTemplate
         include Chef::Mixin::Template
+
+        def initialize(new_resource, current_resource, run_context)
+          @new_resource = new_resource
+          @current_resource = current_resource
+          @run_context = run_context
+        end
+
+        def run_context
+          @run_context
+        end
+
+        def new_resource
+          @new_resource
+        end
+
+        def current_resource
+          @current_resource
+        end
 
         def tempfile
           @tempfile ||= render_with_context

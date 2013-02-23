@@ -23,7 +23,7 @@ class Chef
     class CookbookFile < Chef::Provider::File
 
       def initialize(new_resource, run_context)
-        @content_strategy = Chef::Provider::FileStrategy::ContentFromCookbookFile
+        @content_class = Chef::Provider::FileStrategy::ContentFromCookbookFile
         super
       end
 

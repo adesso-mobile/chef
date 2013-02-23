@@ -16,12 +16,18 @@
 # limitations under the License.
 #
 
-require 'chef/provider/file_strategy/content_strategy'
+#require 'chef/provider/file_strategy/content_strategy'
 
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromResource < ContentStrategy
+      class ContentFromResource
+        def initialize(new_resource, current_resource, run_context)
+          @new_resource = new_resource
+          @current_resource = current_resource
+          @run_context = run_context
+        end
+
         def tempfile
           @tempfile ||= begin
                           if @new_resource.content

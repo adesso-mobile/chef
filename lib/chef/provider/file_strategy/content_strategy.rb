@@ -22,7 +22,8 @@ class Chef
       class ContentStrategy
         attr_accessor :run_context
 
-        def initialize(new_resource, current_resource, run_context)
+        def initialize(content_object, new_resource, current_resource, run_context)
+          @content_object = content_object
           @new_resource = new_resource
           @current_resource = current_resource
           @run_context = run_context
@@ -33,7 +34,7 @@ class Chef
         end
 
         def tempfile
-          raise "class must implement tempfile!"
+          @content_object.tempfile
         end
 
         def checksum
