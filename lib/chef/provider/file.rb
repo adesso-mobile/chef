@@ -25,8 +25,8 @@ require 'etc'
 require 'fileutils'
 require 'chef/scan_access_control'
 require 'chef/mixin/checksum'
-require 'chef/mixin/diffable_file_resource'
 require 'chef/mixin/backupable_file_resource'
+require 'chef/provider/file_strategy/content_strategy'
 require 'chef/provider/file_strategies'
 
 class Chef
@@ -34,7 +34,6 @@ class Chef
     class File < Chef::Provider
       include Chef::Mixin::EnforceOwnershipAndPermissions
       include Chef::Mixin::Checksum
-      include Chef::Mixin::DiffableFileResource
       include Chef::Mixin::BackupableFileResource
 
       attr_accessor :content_strategy
@@ -53,7 +52,7 @@ class Chef
       end
 
       def content_strategy
-        @content_strategy ||= Chef::Provider::FileStrategy::ContentStrategy.new(content_object, new_resource, current_resource, run_context)
+        @content_strategy ||= Chef::Provider::FileStrategy::ContentStrategy.new(self, content_object, new_resource, current_resource, run_context)
       end
 
       def load_current_resource
@@ -110,49 +109,13 @@ class Chef
         if access_controls.requires_changes?
           converge_by(access_controls.describe_changes) do
             access_controls.set_all
-            # update the @new_resource to have the correct new values for reporting (@new_resource == actual "end state" here)
-          end
-        end
-      end
-
-      # handles both cases of when the file exists and must be backed up, and when it does not and must be created
-      def tempfile_to_destfile
-        backup @new_resource.path if ::File.exists?(@new_resource.path)
-        filename = content_strategy.tempfile.path
-        FileUtils.cp(filename, @new_resource.path) if filename && ::File.exists?(filename)
-        content_strategy.cleanup
-      end
-
-      def do_contents_changes
-        if content_strategy.contents_changed?
-          description = []
-          description << "update content in file #{@new_resource.path} from #{short_cksum(@current_resource.checksum)} to #{short_cksum(content_strategy.checksum)}"
-          description << diff(content_strategy.tempfile.path)
-          converge_by(description) do
-            tempfile_to_destfile
-            Chef::Log.info("#{@new_resource} updated file contents #{@new_resource.path}")
-          end
-        end
-        # the cleanup in the converge_by will not be run in whyrun-mode
-        content_strategy.cleanup if whyrun_mode?
-      end
-
-      # because we touch first to create files, we get umasks and inherit
-      # SElinux dir perms and other nice things which we would not get by simply
-      # flipping a tempfile into place
-      def do_create_file
-        unless ::File.exists?(@new_resource.path)
-          description = "create new file #{new_resource.path}"
-          converge_by(description) do
-            FileUtils.touch(@new_resource.path)
-            Chef::Log.info("#{@new_resource} created file #{@new_resource.path}")
           end
         end
       end
 
       def action_create
-        do_create_file
-        do_contents_changes
+        content_strategy.do_create_file
+        content_strategy.do_contents_changes
         do_acl_changes
         load_resource_attributes_from_file(@new_resource)
       end
@@ -197,16 +160,6 @@ class Chef
 #        end
 #      end
 #
-      private
-
-      def short_cksum(checksum)
-        return "none" if checksum.nil?
-        checksum.slice(0,6)
-      end
-
-      def camelize(str)
-        str.split('_').map {|w| w.capitalize}.join
-      end
     end
   end
 end
