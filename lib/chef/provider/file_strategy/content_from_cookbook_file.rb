@@ -16,47 +16,28 @@
 # limitations under the License.
 #
 
-require 'chef/provider/file_strategy/content_strategy'
+require 'chef/provider/file_strategy/abstract_file_thing'
 
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromCookbookFile
-        def initialize(new_resource, current_resource, run_context)
-          @new_resource = new_resource
-          @current_resource = current_resource
-          @run_context = run_context
-        end
-
-        def run_context
-          @run_context
-        end
-
-        def new_resource
-          @new_resource
-        end
-
-        def current_resource
-          @current_resource
-        end
-
-        def tempfile
-          @tempfile ||= begin
-                          cookbook = run_context.cookbook_collection[resource_cookbook]
-                          file_cache_location = cookbook.preferred_filename_on_disk_location(run_context.node, :files, @new_resource.source, @new_resource.path)
-                          if file_cache_location.nil?
-                            nil
-                          else
-                            @tempfile = Tempfile.open(::File.basename(@new_resource.name))
-                            @tempfile.close
-                            Chef::Log.debug("#{@new_resource} staging #{file_cache_location} to #{@tempfile.path}")
-                            FileUtils.cp(file_cache_location, @tempfile.path)
-                            @tempfile
-                          end
-                        end
-        end
+      class ContentFromCookbookFile < AbstractFileThing
 
         private
+
+        def file_for_provider
+          cookbook = run_context.cookbook_collection[resource_cookbook]
+          file_cache_location = cookbook.preferred_filename_on_disk_location(run_context.node, :files, @new_resource.source, @new_resource.path)
+          if file_cache_location.nil?
+            nil
+          else
+            tempfile = Tempfile.open(::File.basename(@new_resource.name))
+            tempfile.close
+            Chef::Log.debug("#{@new_resource} staging #{file_cache_location} to #{tempfile.path}")
+            FileUtils.cp(file_cache_location, tempfile.path)
+            tempfile
+          end
+        end
 
         def resource_cookbook
           @new_resource.cookbook || @new_resource.cookbook_name

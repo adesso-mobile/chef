@@ -17,35 +17,13 @@
 #
 
 require 'chef/mixin/template'
-require 'chef/provider/file_strategy/content_strategy'
+require 'chef/provider/file_strategy/abstract_file_thing'
 
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromTemplate
+      class ContentFromTemplate < AbstractFileThing
         include Chef::Mixin::Template
-
-        def initialize(new_resource, current_resource, run_context)
-          @new_resource = new_resource
-          @current_resource = current_resource
-          @run_context = run_context
-        end
-
-        def run_context
-          @run_context
-        end
-
-        def new_resource
-          @new_resource
-        end
-
-        def current_resource
-          @current_resource
-        end
-
-        def tempfile
-          @tempfile ||= render_with_context
-        end
 
         def template_location
           @template_file_cache_location ||= begin
@@ -55,7 +33,7 @@ class Chef
 
         private
 
-        def render_with_context
+        def file_for_provider
           context = {}
           context.merge!(@new_resource.variables)
           context[:node] = @run_context.node

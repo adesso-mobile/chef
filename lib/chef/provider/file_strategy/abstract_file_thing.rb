@@ -16,22 +16,39 @@
 # limitations under the License.
 #
 
-require 'chef/provider/file_strategy/abstract_file_thing'
-
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromResource < AbstractFileThing
-        def file_for_provider
-          if @new_resource.content
-            tempfile = Tempfile.open(::File.basename(@new_resource.name))
-            tempfile.write(@new_resource.content)
-            tempfile.close
-            tempfile
-          else
-            nil
-          end
+      class AbstractFileThing
+
+        def initialize(new_resource, current_resource, run_context)
+          @new_resource = new_resource
+          @current_resource = current_resource
+          @run_context = run_context
         end
+
+        def run_context
+          @run_context
+        end
+
+        def new_resource
+          @new_resource
+        end
+
+        def current_resource
+          @current_resource
+        end
+
+        def tempfile
+          @tempfile ||= file_for_provider
+        end
+
+        private
+
+        def file_for_provider
+          raise "class must implement file_for_provider!"
+        end
+
       end
     end
   end
