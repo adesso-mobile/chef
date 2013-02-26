@@ -24,7 +24,7 @@ class Chef
       class ContentFromResource < AbstractFileThing
         def file_for_provider
           if @new_resource.content
-            tempfile = Tempfile.open(tempefile_basename, ::File.dirname(@new_resource.path))
+            tempfile = Tempfile.open(tempfile_basename, ::File.dirname(@new_resource.path))
             tempfile.write(@new_resource.content)
             tempfile.close
             tempfile
@@ -32,6 +32,8 @@ class Chef
             nil
           end
         end
+
+        private
 
         def tempfile_basename
           basename = ::File.basename(@new_resource.name)
