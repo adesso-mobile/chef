@@ -32,7 +32,7 @@ class Chef
 
         def deploy(src, dst)
           super
-          shell_out!("/sbin/restorecon #{dst}")  # FIXME: config var to find restorecon
+          shell_out!("/sbin/restorecon -R #{dst}")  # FIXME: config var for restorecon command to use
         end
       end
     end
