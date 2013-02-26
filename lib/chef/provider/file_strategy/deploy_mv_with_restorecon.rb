@@ -16,26 +16,23 @@
 # limitations under the License.
 #
 
-require 'chef/provider/file_strategy/abstract_file_thing'
+require 'chef/mixin/shell_out'
+require 'chef/provider/file_strategy/deploy_mv'
+
+#
+# PURPOSE: this strategy is for servers running selinux to deploy using mv (atomically),
+#          obey default umasks, and get selinux contexts restored.
+#
 
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromResource < AbstractFileThing
-        def file_for_provider
-          if @new_resource.content
-            tempfile = Tempfile.open(tempefile_basename, ::File.dirname(@new_resource.path))
-            tempfile.write(@new_resource.content)
-            tempfile.close
-            tempfile
-          else
-            nil
-          end
-        end
+      class DeployMvWithRestorecon < DeployMv
+        include Chef::Mixin::ShellOut
 
-        def tempfile_basename
-          basename = ::File.basename(@new_resource.name)
-          basename.insert 0, "." unless Chef::Platform.windows?  # dotfile if we're not on windows
+        def deploy(src, dst)
+          super
+          shell_out!("/sbin/restorecon #{dst}")  # FIXME: config var to find restorecon
         end
       end
     end

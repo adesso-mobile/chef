@@ -32,60 +32,6 @@ class Chef
         super
       end
 
-      # TODO: keep this around for mv strategy
-#      def do_create_file
-#        diff = DiffService.new(current_resource, file_cache_location)
-#        @new_resource.diff(diff.for_new_resource)
-#        description = []
-#        description << "create a new cookbook_file #{@new_resource.path}"
-#        description << diff.to_s
-#        converge_by(description) do
-#          Chef::Log.debug("#{@new_resource} has new contents")
-#          backup
-#          # XXX: deploy_tempfile changes acls on the fly without notifying what it does
-#          deploy_tempfile do |tempfile|
-#            Chef::Log.debug("#{@new_resource} staging #{file_cache_location} to #{tempfile.path}")
-#            tempfile.close
-#            FileUtils.cp(file_cache_location, tempfile.path)
-#            enforce_tempfile_inheritance(tempfile.path)
-#          end
-#          update_new_file_state
-#          Chef::Log.info("#{@new_resource} created file #{@new_resource.path}")
-#        end
-#      end
-#
-      # Determine the cookbook to get the file from. If new resource sets an
-      # explicit cookbook, use it, otherwise fall back to the implicit cookbook
-      # i.e., the cookbook the resource was declared in.
-
-#      protected
-
-# TODO: still need this when we implement mv
-#      def enforce_tempfile_inheritance(tempfile_path)
-#        # On the Windows platform, files in the temp directory
-#        # default to not inherit unless the new resource
-#        # specifies rights of
-#        # some sort. Here we ensure that even when no rights
-#        # are
-#        # specified, the dacl's inheritance flag is set.
-#        if Chef::Platform.windows? &&
-#            @new_resource.rights.nil? &&
-#            @new_resource.group.nil? &&
-#            @new_resource.owner.nil? &&
-#            @new_resource.deny_rights.nil?
-#
-#          securable_tempfile = Chef::ReservedNames::Win32::Security::SecurableObject.new(tempfile_path)
-#
-#          # No rights were specified, so the dacl will have
-#          # no explicit aces
-#          default_dacl = Chef::ReservedNames::Win32::Security::ACL.create([])
-#
-#          # In setting this default dacl, set inheritance to
-#          # true
-#          securable_tempfile.set_dacl(default_dacl, true)
-#        end
-#      end
-
     end
   end
 end

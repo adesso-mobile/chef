@@ -30,9 +30,10 @@ class Chef
 
         attr_accessor :run_context
 
-        def initialize(provider, content_object, new_resource, current_resource, run_context)
+        def initialize(provider, content_object, file_deployer, new_resource, current_resource, run_context)
           @provider = provider
           @content_object = content_object
+          @file_deployer = file_deployer
           @new_resource = new_resource
           @current_resource = current_resource
           @run_context = run_context
@@ -42,7 +43,8 @@ class Chef
           unless ::File.exists?(@new_resource.path)
             description = "create new file #{@new_resource.path}"
             @provider.converge_by(description) do
-              FileUtils.touch(@new_resource.path)
+              @file_deployer.create(@new_resource.path)
+              #FileUtils.touch(@new_resource.path)
               Chef::Log.info("#{@new_resource} created file #{@new_resource.path}")
             end
           end
@@ -51,7 +53,8 @@ class Chef
         def tempfile_to_destfile
           if tempfile.path && ::File.exists?(tempfile.path)
             backup @new_resource.path if ::File.exists?(@new_resource.path)
-            FileUtils.cp(tempfile.path, @new_resource.path)
+            @file_deployer.deploy(tempfile.path, @new_resource.path)
+            #FileUtils.cp(tempfile.path, @new_resource.path)
           end
         end
 

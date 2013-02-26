@@ -51,8 +51,12 @@ class Chef
         @content_object ||= @content_class.new(@new_resource, @current_resource, @run_context)
       end
 
+      def deployer
+        @deployer ||= Chef::Provider::FileStrategy::DeployMv.new
+      end
+
       def content_strategy
-        @content_strategy ||= Chef::Provider::FileStrategy::ContentStrategy.new(self, content_object, new_resource, current_resource, run_context)
+        @content_strategy ||= Chef::Provider::FileStrategy::ContentStrategy.new(self, content_object,  deployer, new_resource, current_resource, run_context)
       end
 
       def load_current_resource
@@ -147,19 +151,6 @@ class Chef
         end
       end
 
-      # FIXME: keep this for mv strategy
-#      def deploy_tempfile
-#        Tempfile.open(::File.basename(@new_resource.name)) do |tempfile|
-#          yield tempfile
-#
-#          temp_res = Chef::Resource::CookbookFile.new(@new_resource.name)
-#          temp_res.path(tempfile.path)
-#          ac = Chef::FileAccessControl.new(temp_res, @new_resource, self)
-#          ac.set_all!
-#          FileUtils.mv(tempfile.path, @new_resource.path)
-#        end
-#      end
-#
     end
   end
 end

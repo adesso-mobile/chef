@@ -16,26 +16,22 @@
 # limitations under the License.
 #
 
-require 'chef/provider/file_strategy/abstract_file_thing'
+#
+# PURPOSE: this strategy should be cross-platform and maintain SELinux contexts
+#          and windows ACLs, but it uses cp and is both slower and is not atomic and
+#          may result in a corrupted destination file in a low disk situation.
+#
 
 class Chef
   class Provider
     class FileStrategy
-      class ContentFromResource < AbstractFileThing
-        def file_for_provider
-          if @new_resource.content
-            tempfile = Tempfile.open(tempefile_basename, ::File.dirname(@new_resource.path))
-            tempfile.write(@new_resource.content)
-            tempfile.close
-            tempfile
-          else
-            nil
-          end
+      class DeployCP
+        def create(file)
+          FileUtils.touch(file)
         end
 
-        def tempfile_basename
-          basename = ::File.basename(@new_resource.name)
-          basename.insert 0, "." unless Chef::Platform.windows?  # dotfile if we're not on windows
+        def deploy(src, dst)
+          FileUtils.cp(src, dst)
         end
       end
     end
